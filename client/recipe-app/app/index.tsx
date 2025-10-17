@@ -16,6 +16,7 @@ export default function Index() {
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
+  const [videoDescription, setVideoDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const extractVideoId = (url: string) => {
@@ -26,6 +27,106 @@ export default function Index() {
 
   const getYouTubeThumbnail = (videoId: string) => {
     return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+  };
+
+  const fetchVideoDetails = async (videoId: string) => {
+    try {
+      // YouTube Data API v3 endpoint
+      const API_KEY = 'YOUR_YOUTUBE_API_KEY'; // Replace with your actual API key
+      const url = `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${API_KEY}`;
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('YouTube API quota exceeded or API key invalid');
+        } else if (response.status === 404) {
+          throw new Error('Video not found');
+        } else {
+          throw new Error(`YouTube API error: ${response.status}`);
+        }
+      }
+      
+      const data = await response.json();
+      
+      if (!data.items || data.items.length === 0) {
+        throw new Error('Video not found or unavailable');
+      }
+      
+      const video = data.items[0];
+      const snippet = video.snippet;
+      
+      return {
+        title: snippet.title || 'Untitled Video',
+        description: snippet.description || 'No description available',
+        channelTitle: snippet.channelTitle || 'Unknown Channel',
+        publishedAt: snippet.publishedAt || 'Unknown Date'
+      };
+      
+    } catch (error) {
+      console.error('YouTube API Error:', error);
+      
+      // Fallback to mock data if API fails
+      console.log('Falling back to mock data...');
+      return {
+        title: `Recipe Video ${videoId.substring(0, 8)}`,
+        description: `This is a fallback description for video ${videoId}. 
+
+To get real video descriptions, you need to:
+1. Get a YouTube Data API key from Google Cloud Console
+2. Replace 'YOUR_YOUTUBE_API_KEY' in the code with your actual key
+3. Enable the YouTube Data API v3 for your project
+
+Ingredients:
+- 2 cups of flour
+- 1 cup of sugar
+- 3 eggs
+- 1/2 cup of butter
+- 1 tsp vanilla extract
+
+Instructions:
+1. Preheat oven to 350°F
+2. Mix dry ingredients in a bowl
+3. Beat eggs and add to mixture
+4. Bake for 25-30 minutes
+5. Let cool before serving
+
+Enjoy this wonderful recipe!`,
+        channelTitle: 'Demo Channel',
+        publishedAt: new Date().toISOString()
+      };
+    }
+  };
+
+  const sendToBackend = async (videoData: any) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/recipes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          videoId: videoData.videoId,
+          title: videoData.title,
+          description: videoData.description,
+          thumbnailUrl: videoData.thumbnailUrl,
+          youtubeUrl: youtubeUrl,
+          channelTitle: videoData.channelTitle,
+          publishedAt: videoData.publishedAt,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save recipe to backend');
+      }
+
+      const result = await response.json();
+      console.log('Backend response:', result);
+      return result;
+    } catch (error) {
+      console.error('Backend error:', error);
+      throw error;
+    }
   };
 
   const handleSubmit = async () => {
@@ -43,14 +144,31 @@ export default function Index() {
     setIsLoading(true);
     
     try {
-      // Simulate API call to get video title (in real app, you'd call YouTube API)
+      // Fetch video details (title and description)
+      const videoDetails = await fetchVideoDetails(videoId);
+      
+      // Get thumbnail
       const thumbnail = getYouTubeThumbnail(videoId);
+      
+      // Update UI state
       setThumbnailUrl(thumbnail);
-      setVideoTitle(`Recipe Video ${videoId.substring(0, 8)}...`);
+      setVideoTitle(videoDetails.title);
+      setVideoDescription(videoDetails.description);
+      
+      // Send to backend
+      await sendToBackend({
+        videoId,
+        title: videoDetails.title,
+        description: videoDetails.description,
+        thumbnailUrl: thumbnail,
+        channelTitle: videoDetails.channelTitle,
+        publishedAt: videoDetails.publishedAt,
+      });
       
       Alert.alert('Success', 'Recipe saved successfully!');
     } catch (error) {
       Alert.alert('Error', 'Failed to process the video');
+      console.error('Error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -108,6 +226,14 @@ export default function Index() {
                   resizeMode="cover"
                 />
                 <Text style={styles.videoTitle}>{videoTitle}</Text>
+                
+                {/* Video Description */}
+                {videoDescription && (
+                  <View style={styles.descriptionContainer}>
+                    <Text style={styles.descriptionTitle}>Recipe Description:</Text>
+                    <Text style={styles.descriptionText}>{videoDescription}</Text>
+                  </View>
+                )}
               </View>
             )}
           </View>
@@ -149,7 +275,7 @@ export default function Index() {
               <Text style={styles.statLabel}>Imported recipes</Text>
             </View>
           </View>
-        </View>
+    </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -257,6 +383,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6c757d',
     textAlign: 'center',
+  },
+  descriptionContainer: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    maxWidth: '100%',
+  },
+  descriptionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 8,
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: '#6c757d',
+    lineHeight: 20,
   },
   featuresSection: {
     marginVertical: 32,
