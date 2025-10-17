@@ -179,7 +179,7 @@ Enjoy this wonderful recipe!`,
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.logo}>Recify</Text>
+          <Text style={styles.logo}>Yorigo</Text>
           <Text style={styles.tagline}>All your favorite recipes, finally in one place.</Text>
         </View>
 
