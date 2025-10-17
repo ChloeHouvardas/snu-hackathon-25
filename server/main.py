@@ -90,6 +90,66 @@ async def fetch_youtube_video_details(video_id: str) -> dict:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to fetch video details: {str(e)}")
 
+# AI parsing: convert freeform description -> structured JSON { ingredients: string[], instructions: string[] }
+async def parse_recipe_with_ai(description: str) -> dict:
+    api_key = os.getenv("OPENAI_API_KEY")
+    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    if not api_key:
+        # Graceful fallback: return empty structure when key not configured
+        return {"ingredients": [], "instructions": []}
+
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+
+    system_prompt = (
+        "You are a parser that extracts a cooking recipe from freeform text. "
+        "Return strict JSON with two keys: ingredients (array of strings) and instructions (array of strings). "
+        "Ingredients should be concise items; instructions should be numbered step strings without extra commentary."
+    )
+
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": description},
+        ],
+        # Request JSON-only output if supported by the model
+        "response_format": {"type": "json_object"},
+        "temperature": 0.2,
+    }
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        try:
+            resp = await client.post(url, headers=headers, json=payload)
+            resp.raise_for_status()
+            data = resp.json()
+            content = (
+                data.get("choices", [{}])[0]
+                .get("message", {})
+                .get("content", "{}")
+            )
+            try:
+                parsed = json.loads(content)
+            except Exception:
+                # If model didn't respect JSON mode perfectly, attempt best-effort
+                parsed = {"ingredients": [], "instructions": []}
+            # Normalize shape
+            ingredients = parsed.get("ingredients") or []
+            instructions = parsed.get("instructions") or []
+            if not isinstance(ingredients, list):
+                ingredients = []
+            if not isinstance(instructions, list):
+                instructions = []
+            return {"ingredients": ingredients, "instructions": instructions}
+        except httpx.HTTPStatusError as e:
+            # On error, return empty structure rather than failing the whole request
+            return {"ingredients": [], "instructions": []}
+        except Exception:
+            return {"ingredients": [], "instructions": []}
+
 @app.get("/")
 def read_root():
     return {"message": "Recipe API Server is running!"}
@@ -127,7 +187,7 @@ async def fetch_video_details(request: VideoRequest):
         raise HTTPException(status_code=500, detail=f"Failed to process video: {str(e)}")
 
 @app.post("/api/recipes")
-def save_recipe(recipe: RecipeData):
+async def save_recipe(recipe: RecipeData):
     """
     Save a recipe from YouTube video data
     """
@@ -146,6 +206,13 @@ def save_recipe(recipe: RecipeData):
         print("-" * 40)
         print(recipe.description)
         print("-" * 40)
+
+        # Parse recipe with AI
+        parsed = await parse_recipe_with_ai(recipe.description)
+        print("\nPARSED RECIPE (AI):")
+        print("-" * 40)
+        print(json.dumps(parsed, indent=2))
+        print("-" * 40)
         print("="*80 + "\n")
         
         # Here you could save to database, file, etc.
@@ -158,7 +225,8 @@ def save_recipe(recipe: RecipeData):
                 "videoId": recipe.videoId,
                 "title": recipe.title,
                 "description_length": len(recipe.description),
-                "saved_at": datetime.now().isoformat()
+                "saved_at": datetime.now().isoformat(),
+                "parsed": parsed,
             }
         }
         
@@ -185,3 +253,12 @@ def get_recipe(recipe_id: str):
         "recipe_id": recipe_id,
         "message": "Recipe not found. This is a placeholder endpoint."
     }
+
+@app.post("/api/parse-recipe")
+async def parse_recipe_endpoint(payload: dict):
+    """Parse a freeform description into structured JSON using AI."""
+    description = payload.get("description", "") if isinstance(payload, dict) else ""
+    if not description:
+        raise HTTPException(status_code=400, detail="Missing 'description' in request body")
+    parsed = await parse_recipe_with_ai(description)
+    return {"success": True, "parsed": parsed}

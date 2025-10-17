@@ -242,7 +242,7 @@ Enjoy this wonderful recipe!`,
             <View style={styles.featureItem}>
               <Text style={styles.featureItemTitle}>Keep your recipes beautifully organized</Text>
               <Text style={styles.featureItemDescription}>
-                Group them into collections like 'Breakfast', 'Vegan', or 'Lazy Dinners'.
+                Group them into collections like &apos;Breakfast&apos;, &apos;Vegan&apos;, or &apos;Lazy Dinners&apos;.
               </Text>
             </View>
 
