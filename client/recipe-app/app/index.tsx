@@ -29,53 +29,52 @@ export default function Index() {
     return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
   };
 
-  const fetchVideoDetails = async (videoId: string) => {
+  const fetchVideoDetails = async (youtubeUrl: string) => {
     try {
-      // YouTube Data API v3 endpoint
-      const API_KEY = 'YOUR_YOUTUBE_API_KEY'; // Replace with your actual API key
-      const url = `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${API_KEY}`;
-      
-      const response = await fetch(url);
-      
+      // Call our backend API instead of YouTube directly
+      const response = await fetch('http://localhost:8000/api/fetch-video', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          youtubeUrl: youtubeUrl,
+        }),
+      });
+
       if (!response.ok) {
-        if (response.status === 403) {
-          throw new Error('YouTube API quota exceeded or API key invalid');
-        } else if (response.status === 404) {
-          throw new Error('Video not found');
-        } else {
-          throw new Error(`YouTube API error: ${response.status}`);
-        }
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to fetch video details');
       }
-      
+
       const data = await response.json();
       
-      if (!data.items || data.items.length === 0) {
-        throw new Error('Video not found or unavailable');
-      }
-      
-      const video = data.items[0];
-      const snippet = video.snippet;
-      
       return {
-        title: snippet.title || 'Untitled Video',
-        description: snippet.description || 'No description available',
-        channelTitle: snippet.channelTitle || 'Unknown Channel',
-        publishedAt: snippet.publishedAt || 'Unknown Date'
+        videoId: data.videoId,
+        title: data.title,
+        description: data.description,
+        channelTitle: data.channelTitle,
+        publishedAt: data.publishedAt,
+        thumbnailUrl: data.thumbnailUrl
       };
       
     } catch (error) {
-      console.error('YouTube API Error:', error);
+      console.error('Backend API Error:', error);
       
-      // Fallback to mock data if API fails
+      // Fallback to mock data if backend fails
       console.log('Falling back to mock data...');
+      const videoId = extractVideoId(youtubeUrl) || 'unknown';
+      
       return {
+        videoId: videoId,
         title: `Recipe Video ${videoId.substring(0, 8)}`,
         description: `This is a fallback description for video ${videoId}. 
 
 To get real video descriptions, you need to:
-1. Get a YouTube Data API key from Google Cloud Console
-2. Replace 'YOUR_YOUTUBE_API_KEY' in the code with your actual key
-3. Enable the YouTube Data API v3 for your project
+1. Set up your YouTube API key in the backend server
+2. Create a .env file in the server directory
+3. Add: YOUTUBE_API_KEY=your_actual_api_key
+4. Restart your backend server
 
 Ingredients:
 - 2 cups of flour
@@ -93,7 +92,8 @@ Instructions:
 
 Enjoy this wonderful recipe!`,
         channelTitle: 'Demo Channel',
-        publishedAt: new Date().toISOString()
+        publishedAt: new Date().toISOString(),
+        thumbnailUrl: getYouTubeThumbnail(videoId)
       };
     }
   };
@@ -144,23 +144,20 @@ Enjoy this wonderful recipe!`,
     setIsLoading(true);
     
     try {
-      // Fetch video details (title and description)
-      const videoDetails = await fetchVideoDetails(videoId);
-      
-      // Get thumbnail
-      const thumbnail = getYouTubeThumbnail(videoId);
+      // Fetch video details from our backend API
+      const videoDetails = await fetchVideoDetails(youtubeUrl);
       
       // Update UI state
-      setThumbnailUrl(thumbnail);
+      setThumbnailUrl(videoDetails.thumbnailUrl);
       setVideoTitle(videoDetails.title);
       setVideoDescription(videoDetails.description);
       
       // Send to backend
       await sendToBackend({
-        videoId,
+        videoId: videoDetails.videoId,
         title: videoDetails.title,
         description: videoDetails.description,
-        thumbnailUrl: thumbnail,
+        thumbnailUrl: videoDetails.thumbnailUrl,
         channelTitle: videoDetails.channelTitle,
         publishedAt: videoDetails.publishedAt,
       });
