@@ -9,8 +9,12 @@ import {
   StyleSheet,
   Alert,
   KeyboardAvoidingView,
-  Platform 
+  Platform,
+  SafeAreaView,
+  StatusBar
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Link } from 'expo-router';
 
 export default function Index() {
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -172,278 +176,331 @@ Enjoy this wonderful recipe!`,
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.logo}>Yorigo</Text>
-          <Text style={styles.tagline}>All your favorite recipes, finally in one place.</Text>
+    <View style={styles.wrapper}>
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <View style={styles.container}>
+      
+      {/* Top Header */}
+      <View style={styles.topHeader}>
+        <View style={styles.logoContainer}>
+          <View style={styles.logoIcon}>
+            <Image 
+              source={require('../assets/images/Yorigo_icon_dark.png')} 
+              style={styles.logoIconImage}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={styles.logoText}>요리고</Text>
         </View>
+        <Link href="/login" asChild>
+          <TouchableOpacity style={styles.loginButton}>
+            <Text style={styles.loginButtonText}>로그인</Text>
+          </TouchableOpacity>
+        </Link>
+      </View>
 
-        {/* Main Content */}
-        <View style={styles.mainContent}>
-          <View style={styles.featureCard}>
-            <Text style={styles.featureTitle}>Just save it</Text>
-            <Text style={styles.featureDescription}>
-              Found it on YouTube? Just paste the link and never lose it again.
-            </Text>
-            
-            {/* YouTube Input Form */}
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.urlInput}
-                placeholder="Paste your YouTube Short link here..."
-                value={youtubeUrl}
-                onChangeText={setYoutubeUrl}
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="url"
-              />
+      <KeyboardAvoidingView 
+        style={styles.content} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Main Content */}
+          <View style={styles.mainContent}>
+            {/* Center Icon and Title */}
+            <View style={styles.centerContent}>
+              <View style={styles.mainIcon}>
+                <Image 
+                  source={require('../assets/images/Yorigo_icon_light.png')} 
+                  style={styles.mainIconImage}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text style={styles.mainTitle}>요리고</Text>
+              <Text style={styles.mainDescription}>
+                유튜브 쇼츠 요리 영상을 공유하고 재료·조리법을{'\n'}자동으로 분석하세요
+              </Text>
+            </View>
+
+            {/* Input Section */}
+            <View style={styles.inputSection}>
+              <View style={styles.inputWrapper}>
+                <Ionicons name="link-outline" size={20} color="#999999" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="유튜브 또는 인스타그램 영상 링크"
+                  placeholderTextColor="#999999"
+                  value={youtubeUrl}
+                  onChangeText={setYoutubeUrl}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                />
+              </View>
+              
               <TouchableOpacity 
-                style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+                style={[styles.analyzeButton, isLoading && styles.analyzeButtonDisabled]}
                 onPress={handleSubmit}
                 disabled={isLoading}
               >
-                <Text style={styles.submitButtonText}>
-                  {isLoading ? 'Processing...' : 'Save Recipe'}
+                <Text style={styles.analyzeButtonText}>
+                  {isLoading ? '분석 중...' : '레시피 분석하기'}
                 </Text>
               </TouchableOpacity>
             </View>
 
-            {/* Thumbnail Display */}
+            {/* Results Display */}
             {thumbnailUrl && (
-              <View style={styles.thumbnailContainer}>
-                <Text style={styles.thumbnailTitle}>Saved Recipe:</Text>
+              <View style={styles.resultsContainer}>
+                <Text style={styles.resultsTitle}>저장된 레시피:</Text>
                 <Image 
                   source={{ uri: thumbnailUrl }} 
                   style={styles.thumbnail}
                   resizeMode="cover"
                 />
-                <Text style={styles.videoTitle}>{videoTitle}</Text>
+                <Text style={styles.videoTitleText}>{videoTitle}</Text>
                 
-                {/* Video Description */}
                 {videoDescription && (
                   <View style={styles.descriptionContainer}>
-                    <Text style={styles.descriptionTitle}>Recipe Description:</Text>
+                    <Text style={styles.descriptionTitle}>레시피 설명:</Text>
                     <Text style={styles.descriptionText}>{videoDescription}</Text>
                   </View>
                 )}
               </View>
             )}
           </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
-          {/* Features Section */}
-          <View style={styles.featuresSection}>
-            <Text style={styles.sectionTitle}>Saving is just the beginning</Text>
-            
-            <View style={styles.featureItem}>
-              <Text style={styles.featureItemTitle}>Keep your recipes beautifully organized</Text>
-              <Text style={styles.featureItemDescription}>
-                Group them into collections like &apos;Breakfast&apos;, &apos;Vegan&apos;, or &apos;Lazy Dinners&apos;.
-              </Text>
-            </View>
-
-            <View style={styles.featureItem}>
-              <Text style={styles.featureItemTitle}>Cook step by step</Text>
-              <Text style={styles.featureItemDescription}>
-                Follow each step full screen. Swipe through instructions without touching your messy phone.
-              </Text>
-            </View>
-
-            <View style={styles.featureItem}>
-              <Text style={styles.featureItemTitle}>Share recipes with your friends</Text>
-              <Text style={styles.featureItemDescription}>
-                Send recipes to friends or generate beautiful recipe images to share.
-              </Text>
-            </View>
-          </View>
-
-          {/* Stats */}
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>4.9</Text>
-              <Text style={styles.statLabel}>Average rating</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>+100K</Text>
-              <Text style={styles.statLabel}>Imported recipes</Text>
-            </View>
-          </View>
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
+        <Link href="/" asChild>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="home-outline" size={24} color="#FF6900" />
+            <Text style={styles.navLabelActive}>홈</Text>
+          </TouchableOpacity>
+        </Link>
+        
+        <Link href="/recipes" asChild>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="restaurant-outline" size={24} color="#999999" />
+            <Text style={styles.navLabel}>레시피</Text>
+          </TouchableOpacity>
+        </Link>
+        
+        <Link href="/feed" asChild>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="people-outline" size={24} color="#999999" />
+            <Text style={styles.navLabel}>피드</Text>
+          </TouchableOpacity>
+        </Link>
+        
+        <Link href="/cart" asChild>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="cart-outline" size={24} color="#999999" />
+            <Text style={styles.navLabel}>장바구니</Text>
+          </TouchableOpacity>
+        </Link>
+      </View>
+      </View>
     </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    paddingTop: Platform.OS === 'ios' ? 50 : 0,
+  },
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
   },
+  topHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#FF6900',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+    overflow: 'hidden',
+  },
+  logoIconImage: {
+    width: 32,
+    height: 32,
+  },
+  logoText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333333',
+  },
+  loginButton: {
+    backgroundColor: '#FF6900',
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  loginButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  content: {
+    flex: 1,
+  },
   scrollContent: {
     flexGrow: 1,
-  },
-  header: {
-    alignItems: 'center',
-    paddingTop: 60,
+    justifyContent: 'center',
     paddingBottom: 40,
-    paddingHorizontal: 20,
-    backgroundColor: '#f8f9fa',
-  },
-  logo: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 16,
-  },
-  tagline: {
-    fontSize: 20,
-    color: '#6c757d',
-    textAlign: 'center',
-    lineHeight: 28,
   },
   mainContent: {
-    flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
   },
-  featureCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 24,
-    marginVertical: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
+  centerContent: {
+    alignItems: 'center',
+    marginBottom: 40,
   },
-  featureTitle: {
+  mainIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 25,
+    backgroundColor: '#FFF5ED',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  mainIconImage: {
+    width: 80,
+    height: 80,
+  },
+  mainTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  featureDescription: {
-    fontSize: 16,
-    color: '#6c757d',
-    textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 24,
-  },
-  inputContainer: {
-    marginBottom: 24,
-  },
-  urlInput: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    borderWidth: 2,
-    borderColor: '#e9ecef',
+    color: '#FF6900',
     marginBottom: 16,
   },
-  submitButton: {
-    backgroundColor: '#007bff',
+  mainDescription: {
+    fontSize: 14,
+    color: '#666666',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  inputSection: {
+    marginBottom: 24,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f8f8',
     borderRadius: 12,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    marginBottom: 16,
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    fontSize: 14,
+    color: '#333333',
+    paddingVertical: 12,
+  },
+  analyzeButton: {
+    backgroundColor: '#FF6900',
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: 'center',
   },
-  submitButtonDisabled: {
-    backgroundColor: '#6c757d',
+  analyzeButtonDisabled: {
+    backgroundColor: '#FFB380',
   },
-  submitButtonText: {
+  analyzeButtonText: {
     color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
-  thumbnailContainer: {
+  resultsContainer: {
+    marginTop: 32,
     alignItems: 'center',
-    marginTop: 20,
   },
-  thumbnailTitle: {
+  resultsTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#2c3e50',
-    marginBottom: 12,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 16,
   },
   thumbnail: {
-    width: 200,
-    height: 150,
+    width: '100%',
+    height: 200,
     borderRadius: 12,
     marginBottom: 12,
   },
-  videoTitle: {
-    fontSize: 14,
-    color: '#6c757d',
+  videoTitleText: {
+    fontSize: 16,
+    color: '#333333',
     textAlign: 'center',
+    marginBottom: 16,
   },
   descriptionContainer: {
-    marginTop: 16,
+    width: '100%',
     padding: 16,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8f8f8',
     borderRadius: 12,
-    maxWidth: '100%',
   },
   descriptionTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#2c3e50',
+    fontWeight: 'bold',
+    color: '#333333',
     marginBottom: 8,
   },
   descriptionText: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#666666',
     lineHeight: 20,
   },
-  featuresSection: {
-    marginVertical: 32,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  featureItem: {
-    marginBottom: 24,
-    paddingHorizontal: 16,
-  },
-  featureItemTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#2c3e50',
-    marginBottom: 8,
-  },
-  featureItemDescription: {
-    fontSize: 16,
-    color: '#6c757d',
-    lineHeight: 24,
-  },
-  statsContainer: {
+  bottomNav: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: 32,
-    paddingVertical: 24,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 16,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    paddingTop: 8,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 8,
   },
-  statItem: {
+  navItem: {
+    flex: 1,
     alignItems: 'center',
+    paddingVertical: 4,
   },
-  statNumber: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#007bff',
-    marginBottom: 4,
+  navLabel: {
+    fontSize: 11,
+    color: '#999999',
+    marginTop: 4,
   },
-  statLabel: {
-    fontSize: 14,
-    color: '#6c757d',
-    textAlign: 'center',
+  navLabelActive: {
+    fontSize: 11,
+    color: '#FF6900',
+    fontWeight: '600',
+    marginTop: 4,
   },
 });

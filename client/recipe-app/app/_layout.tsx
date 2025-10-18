@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Tabs } from "expo-router";
 import { Text, TextInput } from "react-native";
 import { useFonts } from "expo-font";
 import {
@@ -27,9 +27,10 @@ export default function RootLayout() {
   RNTextInput.defaultProps.style = [RNTextInput.defaultProps.style, { fontFamily: "Inter_400Regular" }].filter(Boolean);
 
   return (
-    <Stack
+    <Tabs
       screenOptions={{
-        headerTitleStyle: { fontFamily: "Inter_600SemiBold" },
+        headerShown: false,
+        tabBarStyle: { display: 'none' }, // Hide default tab bar since we have custom one
       }}
     />
   );
