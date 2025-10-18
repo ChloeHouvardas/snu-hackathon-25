@@ -18,6 +18,7 @@ venvRecipe/
 .venv/
 env/
 ENV/
+.env
 
 # --- IDE / Editors ---
 .vscode/
