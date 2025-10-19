@@ -7,21 +7,18 @@ import {
   Image, 
   ScrollView, 
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   StatusBar
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
+import RecipeParsingModal from './recipe-parsing';
 
 export default function Index() {
   const [youtubeUrl, setYoutubeUrl] = useState('');
-  const [thumbnailUrl, setThumbnailUrl] = useState('');
-  const [videoTitle, setVideoTitle] = useState('');
-  const [videoDescription, setVideoDescription] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [showParsingModal, setShowParsingModal] = useState(false);
+  const [currentVideoData, setCurrentVideoData] = useState<any>(null);
 
   const extractVideoId = (url: string) => {
     const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
@@ -29,150 +26,44 @@ export default function Index() {
     return match ? match[1] : null;
   };
 
-  const getYouTubeThumbnail = (videoId: string) => {
-    return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-  };
-
-  const fetchVideoDetails = async (youtubeUrl: string) => {
-    try {
-      // Call our backend API instead of YouTube directly
-      const response = await fetch('http://localhost:8000/api/fetch-video', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          youtubeUrl: youtubeUrl,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to fetch video details');
-      }
-
-      const data = await response.json();
-      
-      return {
-        videoId: data.videoId,
-        title: data.title,
-        description: data.description,
-        channelTitle: data.channelTitle,
-        publishedAt: data.publishedAt,
-        thumbnailUrl: data.thumbnailUrl
-      };
-      
-    } catch (error) {
-      console.error('Backend API Error:', error);
-      
-      // Fallback to mock data if backend fails
-      console.log('Falling back to mock data...');
-      const videoId = extractVideoId(youtubeUrl) || 'unknown';
-      
-      return {
-        videoId: videoId,
-        title: `Recipe Video ${videoId.substring(0, 8)}`,
-        description: `This is a fallback description for video ${videoId}. 
-
-To get real video descriptions, you need to:
-1. Set up your YouTube API key in the backend server
-2. Create a .env file in the server directory
-3. Add: YOUTUBE_API_KEY=your_actual_api_key
-4. Restart your backend server
-
-Ingredients:
-- 2 cups of flour
-- 1 cup of sugar
-- 3 eggs
-- 1/2 cup of butter
-- 1 tsp vanilla extract
-
-Instructions:
-1. Preheat oven to 350°F
-2. Mix dry ingredients in a bowl
-3. Beat eggs and add to mixture
-4. Bake for 25-30 minutes
-5. Let cool before serving
-
-Enjoy this wonderful recipe!`,
-        channelTitle: 'Demo Channel',
-        publishedAt: new Date().toISOString(),
-        thumbnailUrl: getYouTubeThumbnail(videoId)
-      };
-    }
-  };
-
-  const sendToBackend = async (videoData: any) => {
-    try {
-      const response = await fetch('http://localhost:8000/api/recipes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          videoId: videoData.videoId,
-          title: videoData.title,
-          description: videoData.description,
-          thumbnailUrl: videoData.thumbnailUrl,
-          youtubeUrl: youtubeUrl,
-          channelTitle: videoData.channelTitle,
-          publishedAt: videoData.publishedAt,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save recipe to backend');
-      }
-
-      const result = await response.json();
-      console.log('Backend response:', result);
-      return result;
-    } catch (error) {
-      console.error('Backend error:', error);
-      throw error;
-    }
-  };
-
   const handleSubmit = async () => {
-    if (!youtubeUrl.trim()) {
-      Alert.alert('Error', 'Please enter a YouTube URL');
-      return;
-    }
-
-    const videoId = extractVideoId(youtubeUrl);
-    if (!videoId) {
-      Alert.alert('Error', 'Please enter a valid YouTube URL');
-      return;
-    }
-
-    setIsLoading(true);
+    console.log('Button pressed! YouTube URL:', youtubeUrl);
     
-    try {
-      // Fetch video details from our backend API
-      const videoDetails = await fetchVideoDetails(youtubeUrl);
-      
-      // Update UI state
-      setThumbnailUrl(videoDetails.thumbnailUrl);
-      setVideoTitle(videoDetails.title);
-      setVideoDescription(videoDetails.description);
-      
-      // Send to backend
-      await sendToBackend({
-        videoId: videoDetails.videoId,
-        title: videoDetails.title,
-        description: videoDetails.description,
-        thumbnailUrl: videoDetails.thumbnailUrl,
-        channelTitle: videoDetails.channelTitle,
-        publishedAt: videoDetails.publishedAt,
-      });
-      
-      Alert.alert('Success', 'Recipe saved successfully!');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to process the video');
-      console.error('Error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    // For now, just open the modal with fake data immediately
+    const videoId = extractVideoId(youtubeUrl) || 'dQw4w9WgXcQ';
+    
+    // Create fake video data
+    const fakeVideoData = {
+      videoId: videoId,
+      title: '5kg 뺄때 자주먹은 단짠단짠 에어프라이어 치킨, 초간단 다이어트 레시피',
+      description: `재료:
+- 닭윙 (치킨윙, 윙봉, 닭다리 모두 OK)
+- 버터
+- 간장
+- 알룰로스 (설탕 대신)
+- 다진마늘
+- 소금
+
+조리법:
+1. 닭 냄새 제거해주세요
+2. 허니 간장소스 만들어주세요 (버터+소금+다진마늘+간장+알룰로스)
+3. 닭에 칼집을 내고 간장소스 부어주세요
+4. 에어프라이어 구워주세요 (180도 10분, 180도 3분)
+5. 완성!
+
+맛있게 먹는 꿀팁:
+저당 마요네즈+청양고추 곁들이면 매콤하고 맛있어요!`,
+      thumbnailUrl: 'LOCAL_IMAGE', // Special marker for local image
+      channelTitle: '다이어트 요리',
+      publishedAt: new Date().toISOString(),
+    };
+    
+    console.log('Setting modal data:', fakeVideoData);
+    setCurrentVideoData(fakeVideoData);
+    
+    // Show the parsing modal immediately
+    console.log('Showing parsing modal...');
+    setShowParsingModal(true);
   };
 
   return (
@@ -241,35 +132,14 @@ Enjoy this wonderful recipe!`,
               </View>
               
               <TouchableOpacity 
-                style={[styles.analyzeButton, isLoading && styles.analyzeButtonDisabled]}
+                style={styles.analyzeButton}
                 onPress={handleSubmit}
-                disabled={isLoading}
               >
                 <Text style={styles.analyzeButtonText}>
-                  {isLoading ? '분석 중...' : '레시피 분석하기'}
+                  레시피 분석하기
                 </Text>
               </TouchableOpacity>
             </View>
-
-            {/* Results Display */}
-            {thumbnailUrl && (
-              <View style={styles.resultsContainer}>
-                <Text style={styles.resultsTitle}>저장된 레시피:</Text>
-                <Image 
-                  source={{ uri: thumbnailUrl }} 
-                  style={styles.thumbnail}
-                  resizeMode="cover"
-                />
-                <Text style={styles.videoTitleText}>{videoTitle}</Text>
-                
-                {videoDescription && (
-                  <View style={styles.descriptionContainer}>
-                    <Text style={styles.descriptionTitle}>레시피 설명:</Text>
-                    <Text style={styles.descriptionText}>{videoDescription}</Text>
-                  </View>
-                )}
-              </View>
-            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -305,6 +175,15 @@ Enjoy this wonderful recipe!`,
         </Link>
       </View>
       </View>
+
+      {/* Recipe Parsing Modal */}
+      {currentVideoData && (
+        <RecipeParsingModal
+          visible={showParsingModal}
+          onClose={() => setShowParsingModal(false)}
+          videoData={currentVideoData}
+        />
+      )}
     </View>
   );
 }
@@ -477,6 +356,13 @@ const styles = StyleSheet.create({
   descriptionText: {
     fontSize: 14,
     color: '#666666',
+    lineHeight: 20,
+  },
+  resultsSubtitle: {
+    fontSize: 14,
+    color: '#666666',
+    textAlign: 'center',
+    marginTop: 8,
     lineHeight: 20,
   },
   bottomNav: {
