@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 
 export default function FeedPage() {
-  const posts = [
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [posts, setPosts] = useState([
     {
       id: 1,
       user: {
@@ -11,9 +13,10 @@ export default function FeedPage() {
         avatar: '👩',
         timeAgo: '2시간 전',
       },
-      image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&q=80',
+      image: require('../assets/images/creamPasta.jpg'), // Creamy pasta
       likes: 24,
       comments: 8,
+      isLiked: false,
       recipe: {
         title: '크림 파스타',
         description: '이 크림 파스타는 정말 환상적이었어요! 소스가 정말 부드럽고 크리미했고 베이컨이 완벽한 바삭한 식감을 더해줬어요. 가족들이 정말 좋아했습니다!',
@@ -32,9 +35,10 @@ export default function FeedPage() {
         avatar: '👨',
         timeAgo: '5시간 전',
       },
-      image: 'https://images.unsplash.com/photo-1582734404997-c645a89e5d63?w=800&q=80',
+      image: require('../assets/images/kimchiJigae.jpg'), // Kimchi jjigae
       likes: 18,
       comments: 5,
+      isLiked: false,
       recipe: {
         title: '김치찌개',
         description: '집에서 만든 김치로 끓인 김치찌개입니다. 돼지고기를 듬뿍 넣어서 국물이 진하고 맛있어요. 밥 한 공기 뚝딱 먹었습니다!',
@@ -53,9 +57,10 @@ export default function FeedPage() {
         avatar: '👩',
         timeAgo: '1일 전',
       },
-      image: 'https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&q=80',
+      image: require('../assets/images/bulgogi.jpg'), // Bulgogi
       likes: 32,
       comments: 12,
+      isLiked: false,
       recipe: {
         title: '불고기',
         description: '양념이 고기에 완벽하게 배어서 정말 맛있었어요. 달콤하면서도 짭조름한 맛이 일품이고 파와 함께 먹으니 더 맛있네요. 다음엔 더 많이 만들어야겠어요!',
@@ -67,7 +72,21 @@ export default function FeedPage() {
         recommend: 5,
       },
     },
-  ];
+  ]);
+
+  const toggleLike = (postId: number) => {
+    setPosts(prevPosts =>
+      prevPosts.map(post =>
+        post.id === postId
+          ? {
+              ...post,
+              isLiked: !post.isLiked,
+              likes: post.isLiked ? post.likes - 1 : post.likes + 1,
+            }
+          : post
+      )
+    );
+  };
 
   const comments = [
     { user: '최지훈', text: '정말 맛있어 보여요! 만드는데 얼마나 걸렸나요?', time: '1시간 전' },
@@ -127,7 +146,7 @@ export default function FeedPage() {
 
               {/* Post Image */}
               <Image 
-                source={{ uri: post.image }} 
+                source={post.image} 
                 style={styles.postImage}
                 resizeMode="cover"
               />
@@ -135,9 +154,21 @@ export default function FeedPage() {
               {/* Interaction Bar */}
               <View style={styles.interactionBar}>
                 <View style={styles.interactionLeft}>
-                  <TouchableOpacity style={styles.interactionButton}>
-                    <Ionicons name="heart-outline" size={24} color="#333333" />
-                    <Text style={styles.interactionCount}>{post.likes}</Text>
+                  <TouchableOpacity 
+                    style={styles.interactionButton}
+                    onPress={() => toggleLike(post.id)}
+                  >
+                    <Ionicons 
+                      name={post.isLiked ? "heart" : "heart-outline"} 
+                      size={24} 
+                      color={post.isLiked ? "#FF6900" : "#333333"} 
+                    />
+                    <Text style={[
+                      styles.interactionCount,
+                      post.isLiked && styles.interactionCountLiked
+                    ]}>
+                      {post.likes}
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.interactionButton}>
                     <Ionicons name="chatbubble-outline" size={22} color="#333333" />
@@ -181,7 +212,15 @@ export default function FeedPage() {
 
               {/* Action Buttons */}
               <View style={styles.actionButtons}>
-                <TouchableOpacity style={styles.viewRecipeButton}>
+                <TouchableOpacity 
+                  style={styles.viewRecipeButton}
+                  onPress={() => {
+                    setShowSuccessModal(true);
+                    setTimeout(() => {
+                      setShowSuccessModal(false);
+                    }, 1500);
+                  }}
+                >
                   <Text style={styles.viewRecipeButtonText}>레시피 보기</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.cartButton}>
@@ -242,6 +281,16 @@ export default function FeedPage() {
           </Link>
         </View>
       </View>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <View style={styles.successModalOverlay}>
+          <View style={styles.successModal}>
+            <Ionicons name="checkmark-circle" size={48} color="#4CAF50" />
+            <Text style={styles.successModalText}>성공!</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -392,6 +441,9 @@ const styles = StyleSheet.create({
     color: '#333333',
     fontWeight: '500',
   },
+  interactionCountLiked: {
+    color: '#FF6900',
+  },
   recipeInfo: {
     paddingHorizontal: 16,
     marginBottom: 16,
@@ -528,6 +580,34 @@ const styles = StyleSheet.create({
     color: '#FF6900',
     fontWeight: '600',
     marginTop: 4,
+  },
+  successModalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  successModal: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  successModalText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333333',
+    marginTop: 16,
+    textAlign: 'center',
   },
 });
 

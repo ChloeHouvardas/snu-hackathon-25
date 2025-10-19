@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useCart } from './CartContext';
 
 interface ParsedRecipe {
   ingredients: string[];
@@ -34,10 +35,12 @@ interface RecipeParsingModalProps {
 
 export default function RecipeParsingModal({ visible, onClose, videoData }: RecipeParsingModalProps) {
   const router = useRouter();
+  const { addRecipeToCart } = useCart();
   const [parsedRecipe, setParsedRecipe] = useState<ParsedRecipe>({ ingredients: [], instructions: [] });
   const [isLoading, setIsLoading] = useState(false);
   const [portionCount, setPortionCount] = useState(2);
   const [selectedIngredients, setSelectedIngredients] = useState<Set<number>>(new Set());
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   console.log('RecipeParsingModal rendered with:', { visible, videoData });
 
@@ -128,6 +131,19 @@ export default function RecipeParsingModal({ visible, onClose, videoData }: Reci
       newSelected.add(index);
     }
     setSelectedIngredients(newSelected);
+  };
+
+  const handleAddToCart = () => {
+    // Don't actually add to cart - just show success message
+    console.log('Add to cart button pressed (not adding to cart)');
+
+    // Show success modal
+    setShowSuccessModal(true);
+    // Close the modal after a short delay
+    setTimeout(() => {
+      setShowSuccessModal(false);
+      onClose();
+    }, 1500);
   };
 
   const handleSaveRecipe = async () => {
@@ -291,7 +307,7 @@ export default function RecipeParsingModal({ visible, onClose, videoData }: Reci
 
               {/* Action Buttons */}
               <View style={styles.actionButtons}>
-                <TouchableOpacity style={styles.addToCartButton}>
+                <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
                   <Ionicons name="cart-outline" size={20} color="#ffffff" />
                   <Text style={styles.addToCartText}>장바구니에 추가</Text>
                 </TouchableOpacity>
@@ -305,6 +321,16 @@ export default function RecipeParsingModal({ visible, onClose, videoData }: Reci
           )}
         </ScrollView>
       </View>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <View style={styles.successModalOverlay}>
+          <View style={styles.successModal}>
+            <Ionicons name="checkmark-circle" size={48} color="#4CAF50" />
+            <Text style={styles.successModalText}>재료가 장바구니에{'\n'}추가되었습니다!</Text>
+          </View>
+        </View>
+      )}
     </Modal>
   );
 }
@@ -558,5 +584,34 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  successModalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  successModal: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  successModalText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333333',
+    marginTop: 16,
+    textAlign: 'center',
+    lineHeight: 26,
   },
 });

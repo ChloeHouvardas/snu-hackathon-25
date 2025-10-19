@@ -1,102 +1,88 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Image, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
+import { useCart } from './CartContext';
 
 export default function CartPage() {
-  // Mock cart data - in real app this would come from global state
-  const [cartRecipes, setCartRecipes] = useState([
+  const { cartRecipes: globalCartRecipes, removeRecipe: globalRemoveRecipe, clearAll: globalClearAll } = useCart();
+
+  // Mock cart data with only chicken recipe initially
+  const [localCartRecipes, setLocalCartRecipes] = useState([
     {
       id: '1',
-      name: '비빔밥 (Bibimbap)',
+      name: '에어프라이어 치킨',
       servings: 4,
       isExpanded: false,
       ingredients: [
         {
-          name: '당근',
-          amount: '100 g',
+          name: '닭윙',
+          amount: '1 kg',
           recommendations: [
             {
               id: 'p1',
               type: 'best',
-              name: 'Premium 당근',
-              price: '₩2,890',
-              weight: '500g',
-              rating: 4.7,
-              reviews: 523,
-              image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=200&q=80',
+              name: 'Premium 닭윙',
+              price: '₩17,800',
+              weight: '1kg',
+              rating: 4.8,
+              reviews: 342,
+              image: require('../assets/images/chickenPremium.png'),
+              link: 'https://www.coupang.com/vp/products/162464618?itemId=11802546769&vendorItemId=79076122253&pickType=COU_PICK&q=%EB%8B%AD%EC%9C%99&searchId=aa5644ca423454&sourceType=search&itemsCount=36&searchRank=2&rank=2&traceId=mgxfv4sr',
             },
             {
               id: 'p2',
               type: 'budget',
-              name: 'Value 당근',
-              price: '₩1,950',
-              weight: '500g',
-              rating: 4.2,
-              reviews: 187,
-              image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=200&q=80',
+              name: 'Value 닭윙',
+              price: '₩13,000',
+              weight: '1kg',
+              rating: 4.3,
+              reviews: 198,
+              image: require('../assets/images/chickenValue.png'),
             },
           ],
-        },
-        {
-          name: '시금치',
-          amount: '150 g',
-          recommendations: [
-            {
-              id: 'p3',
-              type: 'best',
-              name: 'Premium 시금치',
-              price: '₩3,200',
-              weight: '300g',
-              rating: 4.6,
-              reviews: 412,
-              image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=200&q=80',
-            },
-            {
-              id: 'p4',
-              type: 'budget',
-              name: 'Value 시금치',
-              price: '₩2,100',
-              weight: '300g',
-              rating: 4.1,
-              reviews: 156,
-              image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=200&q=80',
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: '2',
-      name: '김치찌개 (Kimchi Jjigae)',
-      servings: 2,
-      isExpanded: false,
-      ingredients: [
-        {
-          name: '다진 마늘',
-          amount: '1 큰술',
-          recommendations: [],
         },
       ],
     },
   ]);
 
+  // Track expansion state for all recipes
+  const [expandedRecipes, setExpandedRecipes] = useState<Set<string>>(new Set());
+
+  // Merge global cart with local cart (always show chicken, add any global recipes)
+  const allRecipes = [...localCartRecipes, ...globalCartRecipes];
+  
+  // Add expansion state to merged recipes
+  const cartRecipes = allRecipes.map(recipe => ({
+    ...recipe,
+    isExpanded: expandedRecipes.has(recipe.id)
+  }));
+
   const toggleRecipe = (recipeId: string) => {
-    setCartRecipes(prevRecipes =>
-      prevRecipes.map(recipe =>
-        recipe.id === recipeId
-          ? { ...recipe, isExpanded: !recipe.isExpanded }
-          : recipe
-      )
-    );
+    setExpandedRecipes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(recipeId)) {
+        newSet.delete(recipeId);
+      } else {
+        newSet.add(recipeId);
+      }
+      return newSet;
+    });
   };
 
   const removeRecipe = (recipeId: string) => {
-    setCartRecipes(prevRecipes => prevRecipes.filter(recipe => recipe.id !== recipeId));
+    // Try to remove from global cart first
+    if (globalCartRecipes.find(r => r.id === recipeId)) {
+      globalRemoveRecipe(recipeId);
+    } else {
+      // Otherwise remove from local cart
+      setLocalCartRecipes(prevRecipes => prevRecipes.filter(recipe => recipe.id !== recipeId));
+    }
   };
 
   const clearAll = () => {
-    setCartRecipes([]);
+    globalClearAll();
+    setLocalCartRecipes([]);
   };
 
   const isEmpty = cartRecipes.length === 0;
@@ -187,9 +173,11 @@ export default function CartPage() {
                       <View key={index} style={styles.ingredientSection}>
                         <View style={styles.ingredientHeader}>
                           <Text style={styles.ingredientName}>{ingredient.name}</Text>
-                          <Text style={styles.ingredientAmount}>
-                            {ingredient.amount} needed
-                          </Text>
+                          {ingredient.amount && (
+                            <Text style={styles.ingredientAmount}>
+                              {ingredient.amount}
+                            </Text>
+                          )}
                         </View>
 
                         {ingredient.recommendations.map((product) => (
@@ -215,7 +203,7 @@ export default function CartPage() {
 
                             <View style={styles.productInfo}>
                               <Image
-                                source={{ uri: product.image }}
+                                source={product.image}
                                 style={styles.productImage}
                                 resizeMode="cover"
                               />
@@ -234,7 +222,14 @@ export default function CartPage() {
                               </View>
                             </View>
 
-                            <TouchableOpacity style={styles.coupangButton}>
+                            <TouchableOpacity 
+                              style={styles.coupangButton}
+                              onPress={() => {
+                                if (product.link) {
+                                  Linking.openURL(product.link);
+                                }
+                              }}
+                            >
                               <Text style={styles.coupangButtonText}>쿠팡에서 보기</Text>
                               <Ionicons name="arrow-forward" size={16} color="#ffffff" />
                             </TouchableOpacity>

@@ -7,7 +7,7 @@ export default function RecipesPage() {
     {
       id: 1,
       title: '김치찌개 (Kimchi Jjigae)',
-      image: 'https://images.unsplash.com/photo-1582734404997-c645a89e5d63?w=800&q=80',
+      image: require('../assets/images/kimchiJigae.jpg'),
       ingredients: 7,
       servings: 1,
       calories: 320,
@@ -15,7 +15,7 @@ export default function RecipesPage() {
     {
       id: 2,
       title: '불고기 (Bulgogi)',
-      image: 'https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&q=80',
+      image: require('../assets/images/bulgogi.jpg'),
       ingredients: 10,
       servings: 2,
       calories: 450,
@@ -23,7 +23,7 @@ export default function RecipesPage() {
     {
       id: 3,
       title: '비빔밥 (Bibimbap)',
-      image: 'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=800&q=80',
+      image: require('../assets/images/bibimbap.jpg'), // Placeholder
       ingredients: 12,
       servings: 1,
       calories: 520,
@@ -68,7 +68,7 @@ export default function RecipesPage() {
             <Link href={`/recipe/${recipe.id}`} asChild key={recipe.id}>
               <TouchableOpacity style={styles.recipeCard}>
               <Image 
-                source={{ uri: recipe.image }} 
+                source={recipe.image} 
                 style={styles.recipeImage}
                 resizeMode="cover"
               />

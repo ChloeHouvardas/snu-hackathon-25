@@ -7,6 +7,7 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
+import { CartProvider } from "./CartContext";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -27,11 +28,13 @@ export default function RootLayout() {
   RNTextInput.defaultProps.style = [RNTextInput.defaultProps.style, { fontFamily: "Inter_400Regular" }].filter(Boolean);
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: { display: 'none' }, // Hide default tab bar since we have custom one
-      }}
-    />
+    <CartProvider>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: { display: 'none' }, // Hide default tab bar since we have custom one
+        }}
+      />
+    </CartProvider>
   );
 }

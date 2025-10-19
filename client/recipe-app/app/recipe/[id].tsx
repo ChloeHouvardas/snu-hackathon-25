@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useCart } from '../CartContext';
 
 export default function RecipeDetailPage() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
+  const { addRecipeToCart } = useCart();
   
   const [portionCount, setPortionCount] = useState(2);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Mock recipe data - in real app this would come from API/state
   const recipe = {
@@ -68,6 +71,54 @@ export default function RecipeDetailPage() {
     } else {
       return scaledAmount.toFixed(0); // No decimals for large numbers
     }
+  };
+
+  const handleAddToCart = () => {
+    // Add kimchi jjigae recipe to cart
+    const kimchiRecipe = {
+      id: '2',
+      name: '김치찌개 (Kimchi Jjigae)',
+      servings: 4,
+      isExpanded: false,
+      ingredients: [
+        {
+          name: '김치',
+          amount: '400g',
+          recommendations: [
+            {
+              id: 'p3',
+              type: 'best',
+              name: 'Premium 김치',
+              price: '₩16,710',
+              weight: '400g',
+              rating: 4.9,
+              reviews: 892,
+              image: require('../../assets/images/kimchiPremium.png'),
+              link: 'https://www.coupang.com/vp/products/7872371861?itemId=21508882391&vendorItemId=88562399317&q=kimchi&searchId=52e869954339977&sourceType=search&itemsCount=36&searchRank=1&rank=1&traceId=mgxfzg48',
+            },
+            {
+              id: 'p4',
+              type: 'budget',
+              name: 'Value 김치',
+              price: '₩11,500',
+              weight: '400g',
+              rating: 4.5,
+              reviews: 445,
+              image: require('../../assets/images/kimchiValue.png'),
+            },
+          ],
+        },
+      ],
+    };
+
+    addRecipeToCart(kimchiRecipe);
+
+    // Show success modal
+    setShowSuccessModal(true);
+    // Hide modal after 1.5 seconds
+    setTimeout(() => {
+      setShowSuccessModal(false);
+    }, 1500);
   };
 
   return (
@@ -181,7 +232,7 @@ export default function RecipeDetailPage() {
           </View>
 
           {/* Add to Cart Button */}
-          <TouchableOpacity style={styles.addToCartButton}>
+          <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
             <Ionicons name="cart-outline" size={20} color="#ffffff" />
             <Text style={styles.addToCartText}>장바구니에 추가</Text>
           </TouchableOpacity>
@@ -223,6 +274,16 @@ export default function RecipeDetailPage() {
           </View>
         </ScrollView>
       </View>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <View style={styles.successModalOverlay}>
+          <View style={styles.successModal}>
+            <Ionicons name="checkmark-circle" size={48} color="#4CAF50" />
+            <Text style={styles.successModalText}>재료가 장바구니에{'\n'}추가되었습니다!</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -517,6 +578,35 @@ const styles = StyleSheet.create({
   nutritionLabel: {
     fontSize: 13,
     color: '#666666',
+  },
+  successModalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  successModal: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  successModalText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333333',
+    marginTop: 16,
+    textAlign: 'center',
+    lineHeight: 26,
   },
 });
 
