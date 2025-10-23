@@ -1,7 +1,7 @@
 # Yorigo 
 
 <div align="center">
-  <img src="docs/images/Yorigo_icon_dark.png" alt="Yorigo Logo" width="200"/>
+  <img src="assets/images/Yorigo_icon_dark.png" alt="Yorigo Logo" width="200"/>
   <p><em>Your personal Korean cooking companion</em></p>
 </div>
 
