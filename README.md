@@ -13,11 +13,6 @@
 - Smart recipe parsing from video descriptions
 - Ingredient recommendations with price comparisons
 
-<div align="center">
-  <img src="docs/images/kimchiJigae.jpg" alt="Kimchi Jjigae" width="300"/>
-  <img src="docs/images/bulgogi.jpg" alt="Bulgogi" width="300"/>
-  <p><em>Some of our featured recipes</em></p>
-</div>
 
 ### Smart Shopping
 - Automated shopping list generation
