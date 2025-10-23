@@ -1,9 +1,9 @@
 # Yorigo 
 
-<div align="center">
-  <img src="assets/images/Yorigo_icon_dark.png" alt="Yorigo Logo" width="200"/>
-  <p><em>Your personal Korean cooking companion</em></p>
-</div>
+  <div align="center">
+   <img src="client/recipe-app/assets/images/Yorigo_icon_light.png" alt="Yorigo Logo" width="200"/>
+   <p><em>Your personal Korean cooking companion</em></p>
+  </div>
 
 ## Features
 
