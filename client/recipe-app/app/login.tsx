@@ -1,26 +1,42 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Platform, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Platform, Image, Alert, ActivityIndicator } from 'react-native';
 import { Link, useRouter } from 'expo-router';
+import { signInUser } from '../firebase/userService';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       Alert.alert('오류', '이메일과 비밀번호를 입력해주세요.');
       return;
     }
     
-    // TODO: Add backend authentication
-    Alert.alert('성공', '로그인되었습니다!', [
-      {
-        text: '확인',
-        onPress: () => router.push('/'),
-      },
-    ]);
+    setLoading(true);
+    
+    try {
+      const result = await signInUser(email, password);
+      
+      if (result.success) {
+        // navigates immediately after successful login
+        router.replace('/');
+        
+        // shows success message after navigation
+        setTimeout(() => {
+          Alert.alert('성공', '환영합니다!');
+        }, 500);
+      } else {
+        Alert.alert('오류', result.error || '로그인에 실패했습니다.');
+      }
+    } catch (error: any) {
+      Alert.alert('오류', error.message || '로그인 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -83,8 +99,16 @@ export default function LoginPage() {
         </TouchableOpacity>
 
         {/* Login Button */}
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>로그인</Text>
+        <TouchableOpacity 
+          style={[styles.loginButton, loading && styles.loginButtonDisabled]} 
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text style={styles.loginButtonText}>로그인</Text>
+          )}
         </TouchableOpacity>
 
         {/* Sign Up Link */}
@@ -194,6 +218,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 24,
+  },
+  loginButtonDisabled: {
+    backgroundColor: '#FFB380',
+    opacity: 0.7,
   },
   loginButtonText: {
     color: '#ffffff',

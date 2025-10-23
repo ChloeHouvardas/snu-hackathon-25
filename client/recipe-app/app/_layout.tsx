@@ -8,6 +8,7 @@ import {
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
 import { CartProvider } from "./CartContext";
+import { AuthProvider } from "../firebase/AuthContext";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -28,13 +29,15 @@ export default function RootLayout() {
   RNTextInput.defaultProps.style = [RNTextInput.defaultProps.style, { fontFamily: "Inter_400Regular" }].filter(Boolean);
 
   return (
-    <CartProvider>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarStyle: { display: 'none' }, // Hide default tab bar since we have custom one
-        }}
-      />
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <Tabs
+          screenOptions={{
+            headerShown: false,
+            tabBarStyle: { display: 'none' }, // Hide default tab bar since we have custom one
+          }}
+        />
+      </CartProvider>
+    </AuthProvider>
   );
 }

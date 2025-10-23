@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Platform, Image, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Platform, Image, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { Link, useRouter } from 'expo-router';
+import { signUpUser } from '../firebase/userService';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -8,8 +9,9 @@ export default function SignUpPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
       Alert.alert('오류', '모든 필드를 입력해주세요.');
       return;
@@ -20,13 +22,32 @@ export default function SignUpPage() {
       return;
     }
 
-    // TODO: Add backend authentication
-    Alert.alert('성공', '계정이 생성되었습니다!', [
-      {
-        text: '확인',
-        onPress: () => router.push('/'),
-      },
-    ]);
+    if (password.length < 6) {
+      Alert.alert('오류', '비밀번호는 최소 6자 이상이어야 합니다.');
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const result = await signUpUser(email, password, name);
+      
+      if (result.success) {
+        // navigates immediately after successful signup
+        router.replace('/');
+        
+        // shows success message after navigation
+        setTimeout(() => {
+          Alert.alert('성공', '환영합니다! 계정이 생성되었습니다.');
+        }, 500);
+      } else {
+        Alert.alert('오류', result.error || '계정 생성에 실패했습니다.');
+      }
+    } catch (error: any) {
+      Alert.alert('오류', error.message || '계정 생성 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -116,8 +137,16 @@ export default function SignUpPage() {
           </View>
 
           {/* Sign Up Button */}
-          <TouchableOpacity style={styles.signupButton} onPress={handleSignUp}>
-            <Text style={styles.signupButtonText}>계정 만들기</Text>
+          <TouchableOpacity 
+            style={[styles.signupButton, loading && styles.signupButtonDisabled]} 
+            onPress={handleSignUp}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.signupButtonText}>계정 만들기</Text>
+            )}
           </TouchableOpacity>
 
           {/* Login Link */}
@@ -211,6 +240,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 12,
     marginBottom: 24,
+  },
+  signupButtonDisabled: {
+    backgroundColor: '#FFB380',
+    opacity: 0.7,
   },
   signupButtonText: {
     color: '#ffffff',
