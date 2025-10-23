@@ -5,11 +5,11 @@
   <p><em>Your personal Korean cooking companion</em></p>
 </div>
 
-## 📱 Features
+## Features
 
 ### Recipe Discovery
-- Browse curated Korean recipes with detailed instructions
-- YouTube integration for video tutorials
+- Browse your favourite platforms and find curated recipes.
+- Send us a link and lets us do the rest!
 - Smart recipe parsing from video descriptions
 - Ingredient recommendations with price comparisons
 
@@ -24,12 +24,6 @@
 - Price comparison for ingredients
 - Multiple portion calculations
 - Pantry management system
-
-### User Experience
-- Intuitive, modern UI design
-- Multi-language support (English/Korean)
-- Offline recipe access
-- Cross-platform compatibility (iOS/Android)
 
 ## Getting Started With The App
 
@@ -48,11 +42,6 @@
    chmod +x setup.sh
    ./setup.sh
 
-   # Configure your API keys in the .env file
-   # Required: YouTube API key for video integration
-   # Optional: OpenAI API key for enhanced recipe parsing
-   nano .env
-
    # Install frontend dependencies
    cd client/recipe-app
    npm install
@@ -65,8 +54,8 @@
    ```bash
    # Start the backend server (in a new terminal)
    cd server
-   source venvRecipe/bin/activate  # On Linux/Mac
-   # OR use: venvRecipe\Scripts\activate  # On Windows
+   source venvRecipe/bin/activate 
+   # OR use: venvRecipe\Scripts\activate 
    python main.py
 
    # Start the frontend development server (in another terminal)
@@ -94,39 +83,6 @@
 - **UI Components**: Custom components with native elements
 - **Styling**: React Native StyleSheet
 
-## 📂 Project Structure
-
-```
-recipe-app/
-├── app/                   # Main application code
-│   ├── _layout.tsx       # Root layout component
-│   ├── index.tsx         # Home screen
-│   ├── feed.tsx          # Recipe feed
-│   ├── recipes.tsx       # Recipe listing
-│   ├── cart.tsx          # Shopping cart
-│   └── recipe/           # Recipe details
-├── assets/               # Static assets
-│   └── images/          # Image assets
-├── components/           # Reusable components
-└── docs/                # Documentation
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-Create a `.env` file in the root directory:
-```env
-YOUTUBE_API_KEY=your_youtube_api_key
-```
-
-### API Keys
-- YouTube Data API v3 (for recipe video integration)
-- Optional: OpenAI API (for recipe parsing)
-
-## 📱 Screenshots
-
-[Add your app screenshots here]
-
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -135,28 +91,15 @@ YOUTUBE_API_KEY=your_youtube_api_key
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👥 Team
-
-- Developer: [Your Name]
-- Designer: [Designer Name]
-- Project Manager: [PM Name]
-
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Korean recipe content providers
-- Expo team for the amazing framework
-- Our beta testers and early adopters
-
-## 📞 Support
-
-For support, email support@yorigo.com or join our Discord channel.
+- Expo team for the framework
+- Coupang API
+- SNU Hacks
 
 ---
 
 <div align="center">
-  Made with ❤️ for Korean food lovers
+  Made with love for Korean food lovers, 사랑해요
 </div>
